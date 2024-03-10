@@ -1,0 +1,189 @@
+---
+layout: post
+title:  "I Built A Rapberry Pi NAS!"
+description: A Network-Attached Storage (NAS) is one or more storage devices that are attached to the current network and can be accessed by anyone that is currently connected to the network. I build one using my raspberry pi.
+date:   2020-05-17
+categories: One Day Builds
+comments: false
+---
+<p> My brother gifted me a Raspberry Pi 3 a couple of months back. After tinkering around with it for a few days, I kept it aside because I couldn't think of any use case for it that would benefit me everyday. This was until I learned about NAS and its technologies in one of my courses at college.</p> 
+<p> I found it really cool that you can have a Network Attached Storage to access the same files through any deivce on the network. This would allow me to finally have a centralized storage to host a media center and also store some static files and documents. Also, there is an added benefit that this data is always on my own network and can ensure a larger blanket of privacy around it. Ever since then, I have been playing with the idea of building a NAS using my pi. I managed to set it up in less than a day. And it's been a huge help at home. </p>
+<p> I could gone with using OpenMediaVault ( a NAS solution based on Debian Linux) which would set up the NAS for me without me having to do all the heavy lifting. But, where's the fun in taht? So, I took out my black hoodie and did what every professional programmer does. I googled for answers to all my questions. And in a couple of hours, I was done with setting up my very own NAS using the Raspberry Pi.</p>
+
+<div style="text-align:center">
+    <img src="\images\blog3\blog_3_setup.jpg">
+</div>
+
+<!-- Section one -->
+<h2><b> Hardware That I Used: </b></h2>
+<ul>
+    <li> Raspberry Pi 3 model B.</li>
+    <li> Ethernet Cord. </li>
+    <li> One 500 GB Seagate External Hard disk.</li>
+    <li> 16GB class 4 microSD card, loaded with Raspbian Buster Lite. </li>
+    <li> Power Source. </li>
+</ul>
+<p> If I had another spare external hard disk lying around, I would've tried to implement RAID in my NAS, making sure that I always have a backup of all my files. I implemented my NAS with just one hard disk. 
+<br/> I setup the raspberry pi and the NAS headlessly with my laptop and so used the lite version of raspbian. </p>
+
+<!--Section Two -->
+<h2><b> Setting up the NAS </b></h2>
+<p><b>Step 1:</b> Initial setup of Raspberry Pi.</p>
+<p> 
+    I started with downloading and burning the raspbian buster lite OS to the microSD card. Since SSH is not enabled by default, I just created a file named "ssh" with no extension and copied it to the boot folder in the microSD. For those of you who do not know what ssh is- Secure SHell is a software package that enables a secure connection between the client and the server. This means that I am able to control the Pi using my windows machine over my network. <br/> I connected the hard disk, ethernet cable and the power supply to the Pi to turn it on. To connect to the Pi via ssh, I found the IP address that my router had assigned to the Pi and connected to it using the command in the command prompt:
+</p>
+    
+```
+
+    ssh pi@ip_address
+    
+```
+<p>
+    After signing into the Pi using the default password of <b>raspberry</b>, I ran the update commands:
+</p>
+
+
+```
+    sudo apt-get update
+    sudo apt-get upgrate
+```
+<p>
+These grab and install all the latest versions of the packages in raspbian, ensuring highest level of security available at that time.
+</p>
+
+<p><b>Step 2:</b> Install packages and setup NAS</p>
+<p>
+    <b>NTFS Package:</b><br/>
+    While the Linux Kernel has some NTFS support, it is strictly read-only access. This means that we have to install a separate userspace driver to be ale to write to NTFS devices. I had formatted my hard disk to the NTFS format.<br/>
+    To enable the ntfs support by raspbian, I ran:
+</p>
+```
+    sudo apt-get install ntfs-3g
+```
+
+<p>
+    <b>exFAT package:</b><br/>
+    I ran the command to install the exfat support packages as well. You know, just in case. <br/> For this, I ran the command:
+</p>
+```
+    sudo apt-get install exfat-utils exfat-fuse
+```
+
+<p>
+    <b> Samba Server:</b><br/>
+    Samba Server is a very powerful server that will help to share files between Linux on the Raspberry Pi and with a Windows OS system or any other system that is trying to access the files stored in our NAS. It is an open-source implementation of the Common Internet Files System/ Server Message Block (CIFS/ SMB) protocols. <br/>
+    To install samba: 
+</p>
+```
+    sudo apt-get install samba samba-common-bin
+```
+<p>
+    <b> Creating a directory:</b><br/>
+    The NAS contents have to be stored somewhere in the file system of raspbian. For this, I created a new directory named <b>/PiServer</b>.<br/>
+    To create the new directory in the root directory, run:
+</p>
+```
+    sudo mkdir /PiServer
+```
+<p>
+    When I ran the <b> ls / </b>command, I could see that it had been successfully created.<br/> This folder is currently unaccessable to the public. Since I would be the only one accessing the NAS, I wanted to set it's access permissions to read, write and execute ( that's the significance of 777 ).<br/> To change the access permissions of the directory, I used:
+</p>
+```
+    sudo chmod 777 /PiServer
+```
+<p> Now, when I keyed in <b>ls /</b> again, the color of PiServer had changed to green, indicating that I have sucessfully changed its access permissions. </p>
+<div style="text-align:center">
+    <img src="\images\blog3\blog_3_folder_mount.png">
+</div>
+<p> <b> Mount Drive:</b><br/>
+    Now, I had to mount my drive to that directory. Only with this, would the file system know where and how my data is stored on the hard disk. To check the name and status of my hard disk, I used the <b>lsblk</b> command. Now that I had the name of my hard disk, I went ahead and mounted it to the Pi by using:
+</p>
+```
+    sudo mount /dev/sda1 /PiServer
+```
+<p> When I keyed in the <b>lsblk</b> command in again, the hard disk's status showed me that it had sucessfully got mounted.</p>
+<div style="text-align:center">
+    <img src="\images\blog3\blog_3_sda_mount.png">
+</div>
+
+<p> <b> Configuring samba:</b><br/>
+    The next step for me was to configure the samba server.<br/>Run command:
+</p>
+```
+    sudo nano /etc/samba/smb.conf
+```
+<p>
+    This opened a text document and I scrolled all the way down to the bottom of the file and appended it with:
+</p>
+```
+    [Home Disk]
+    comment = "Home Disk"
+    path = /PiServer
+    browsable = yes
+    read only = no
+    writeable = yes
+    create mask = 0777
+    directory mask=0777
+    public = no
+    force user=root
+```
+<p> After this, <b> Ctrl + O, Enter</b> to save and <b>Ctrl + X</b> to exit. </p>
+
+<p> <b>Add New User and Restart samba</b><br/>
+    I added a new user to the raspberry pi with the commands:
+</p>
+```
+    sudo adduser user_name
+    sudo smbpasswd -a password_for_server
+    sudo /etc/init.d/smbd restart
+    sudo /etc/init.d/nmbd restart
+```
+<p> 
+    <b>Set auto mount instructions</b><br/>
+    If I ever do reboot the pi, then the hard disk will stay unmounted until I manually mount it again. Instead, I can ask the pi to mount the hard disk automatically, everytime that the pi reboots.
+    <br/> To do this, open a configuration file and add the second line to the end of the file. 
+</p>
+```
+    sudo nano /etc/dhcpcd.conf
+    /dev/sda1 /PiServer auto defaults, user 0 2
+```
+<p>
+    <b>Set a static IP</b><br/>
+    Everytime that the pi reboots, it's possible that my router would assign a different IP to it since it is currently being assigned an IP dynamically. Since the only way to access my NAS is through its IP address, I would have to check for the new IP address every now and then. To avoid this, I set the Raspberry Pi to have a static IP. <br/> I did this by opening a configuration file and appending osme details to it. The static ip of the Pi can be set anything between 192.168.0.2 - 192.168.0.24
+</p>
+```
+    sudo nano /etc/dhcpcd.conf
+```
+```
+    static ip_address = Enter_ip
+    static routers = router_ip
+    static domain_name_servers = router_ip 
+```
+<p> This was the last step to setup the NAS</p>
+
+<!--Section Three -->
+<h2><b> Accessing the NAS </b></h2>
+<p> Now all that was remaining was to access the NAS from any device on my network. A Windows PC would access the NAS by running the following in the <b>run</b> dialog box:
+</p>
+```
+    \\pi_static_ip
+```
+<p> This would prompt me with the username and password. Once I was through that, I would be presented with the directories and its contents.
+<div style="text-align:center">
+    <img src="\images\blog3\blog_3_NAS_directory.png">
+</div>
+As of now, I am using my PiNAS to store movies and a few important documents.
+</p>
+
+
+<h2><b> That brings this blog to an end... </b></h2>
+<p> Thank you for making it to the end of this blog. During the course of this project, I learnt about setting up my own NAS using the raspberry pi and that by including more than one disks, I can implement RAID for data backup. This was my first experience with samba and configuring the Pi to interface with windows.<br/> I hope this would help you build a NAS using a Raspberry Pi of your own.
+If you have any questions, feel free to contact me.<br/>
+Have a great day!</p>
+
+
+<h2><b> References </b></h2>
+<p>
+    <b><a href="https://www.youtube.com/watch?v=s0Sc2n3gUqA&t=906s"     target="_blank">Ksk Royal's Tutorial </a></b> <br/>
+    <b> <a href="https://www.samba.org/samba/what_is_samba.html" target="_blank">What is Samba? </a></b> <br/>   
+</p>

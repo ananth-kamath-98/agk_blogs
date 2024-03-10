@@ -1,0 +1,169 @@
+---
+layout: post
+title:  "I Deployed My First Discord Bot!"
+description: I wrote and developed my first Discord Bot with Python. I successfully deployed it on Heroku, making sure that it runs all-day long, without me having to run the script on my own computer. In this blog, I tell you about what my bot does and how I did it.
+date:   2020-08-03
+categories: One Day Builds
+comments: false
+---
+<p> 
+    I took up a weekend project to build my own Discord bot with Python. If you dont know what Discord is, it is an instant messaging and VoIP application that enables users to create guilds(commonly known as servers) and allows them to have multiple voice channels in them as well. As a gamer, reliable communication while in-game is key to ensuring a win. And Discord's services offer reliable comms for my team, making it easier for me carry my team to victory. 
+</p>
+<p>
+    Among Discord's bag of tricks, one of my favorite is that it allows users to add <b>Bots</b> to the guild. A Bot is basically a computer program that is built to perform actions assigned to them by its developer. For example, the Rhythm Bot allows a user to play songs in the voice channel that he is currently in. These Bots are invoked by a pre-assigned command, followed by arguments. There are a plethora of Bots that you can find online that do just about everything you command it to. Infact, when I was searching for the right Bot for me, I was faced with the problem of too many choices. Instead, I chose to build my own Bot.
+</p>
+
+<h2><b>About my Discord Bot. </b></h2>
+<div style="text-aling:center">
+    <img src="\images\blog4_deerank\demo.png" style="width:80%;height=80%;">
+</div>
+<p> 
+    One of the most common things that you'd get to read about my guild's conversations is that we deerank a lot in our games. The opponent team always has someone who's cheating (we're just really bad). Keeping with this trend, I named my bot as <b>DeeRank</b>.
+</p>
+<p>
+    The next thing I had to focus on is what DeeRank would be able to do for you(the user). After some thinking, googling and asking around, I came up with a short list of things I'd program it to do. <br>
+    To speak to DeeRank, you'd have to precede the command with <b>></b> symbol.<br>Here's a list of the Bot's functionalities:
+<ol>
+    <li>Commands only for Admin</li>
+        <ul>
+            <li>kick</li>
+            <li>ban</li>
+            <li>leave</li>
+        </ul>
+    <li>Commands for Everyone</li>
+    <ul>
+        <li>8ball</li>
+        <li>dad_joke</li>
+        <li>df</li>
+        <li>memez</li>
+    </ul>
+</ol>
+DeeRank has got quite the potty mouth and wouldn't handle mistakes very well. Just keep that in mind if you plan on adding it to your guild. </p>
+
+<h2><b>A Close Look At The Bot's Code. </b></h2>
+<ul>
+    <li>
+        <h3><b>Entry Point</b></h3>
+        <script src="https://gist.github.com/agk98/7ff299cb72ec710906da4ec7a135a998.js"></script>
+        <p>
+            Discord has made it very simple to interact with their API by publishing the discord.py package. The discord.py package is a Python wrapper for Discord's API. The package provides all the extensions and functions needed to write commands that can be issued to the Bot. This is imported from <b>discord.ext</b>.
+        </p>
+        <p>
+            The first step is to create an instance of the discord bot. Over here, my Bot is named as <b>deerank</b> and this serves as the client which interacts with the discord API. The <b>commands_prefix</b> parameter if to specify what the prefix is to be used when the Bot is invoked by a user. 
+        </p>
+        <p>
+            A very useful feature of discord.py is that it allows for the usage of <b>Cogs</b>. Each cog is a Python class that subclasses <b>commands.Cog</b> and allows me to organise a collection of commands, listeners, and some state into one class. Cogs are thus classes which need to be loaded to be used and unloaded to be removed from the Bot's functionality. The <b>load</b> and <b>unload</b> function enables this functionality. 
+        </p>
+        <p>
+            To run the program, the Bot needs to get authorisation from discord, to be able to interact with the API. For this, it has to connect to the discord server's using it's own Token. The Token, I stored in another file, to keep it hidden. The file reading code is to read the file and retrieve this Token before it runs the program.
+        </p>
+    </li>
+    <li>
+        <h3><b>Commands For The Admin</b></h3>
+        <script src="https://gist.github.com/agk98/8bd3134f170ff77f4fd94cadfc3426d6.js"></script>
+        <p>
+            DeeRank has some Administrator functionalities and these commands can be invoked only by the admin of the guild to avoid any conflicts and abuse of these Bot commands.<br/> Command handlers as functions are responsible for executing commands issued to the Bot. <b>@commands.command()</b> of the commands extension from discord.py provides support for this.<br/>
+            The Bot is able to read the commands issued to it due to the context of the message being fed to it as a parameter of this command. This parameter is <b>ctx</b>.
+            The context parameter is essential for functionality, as it allows for Bot to interact with the guild. With ctx, the Bot sends messages to the server and that channel with <b>ctx.send()</b>. Through ctx, the Bot is able to extract valurable information such as, the user who issued the command, the guild that the user belongs to, the userID, etc..
+        </p>
+        <ol>
+            <li>
+                <b>>kick</b>
+                <p>Parameters: <b>{member: Required} </b></p>
+                <p>
+                    With this, the admin can kick a member out of the guild. When a user issues this command, the bot first authenticates and makes sure that the issuer is the admin of the guild. If not, the Bot replies with a message asking the user to contact the admin to issue the command. The bot verifies this by checking whether the issuer's ID and the guild's ID is the same or no. On the other hand, if the admin is the one who issued to command, then the Bot immediately kicks the member out of the guild and follows with a cheeky message saying that the player has been DeeRanked. 
+                    In case the Bot encounters any errors while carrying out this command, it invokes the <b>kick_error()</b> error handler. This error handler is responsible for checking whether it is a known or unknown error. The two known probable errors here are: <b>commands.BadArgument</b> and <b>commands.MissingRequiredArgument</b>.<br/>The <b>commands.BadArgument</b> is matched when the command parameter doesn't contain the name of a person in the guild.<br/>The <b>commands.MissingRequiredArgument</b> is matched when the issuer forgets to include the name of the member they wish to kick from the guild.<br/>If it isn't among these two, the Bot logs the error for me and reports the same.
+                </p>
+            </li>
+            <li>
+                <b>>ban</b><br/>
+                <p>Parameters: <b>{member: Required}</b></p>
+                <p>
+                    This command invokes the Bot to ban a member from the guild, disallowing them to join the guild again. The functionality and the code of this command is almost entirely the same as that of <b>>kick</b> command. The only difference is that, the Bot executes the <b>member.ban()</b> command instead of the <b>member.kick</b> command. 
+                </p>
+            </li>
+            <li>
+                <b>>leave</b><br/>
+                <p>Parameters: <b>{None}</b></p>
+                <p>
+                    When this command is issued by the admin of the guild, it forces the bot to go offline, making it unavailable to accept commands from users.
+                </p>
+            </li>
+        </ol>
+    </li>
+    <li>
+        <h3><b>Commands For Everyone</b></h3>
+        <script src="https://gist.github.com/agk98/8cddb939f0f9afef0ebd8edcc83fbf4f.js"></script>
+        <p>These are the few commands that can be run by anyone, regardless of their role in the guild. Each command has it's own error handling listeners and functions just like those of the admin's commands.</p>
+        <ol>
+            <li>
+                <b>>8ball</b><br/>
+                <p>Parameters: <b>{question: Required}</b></p>
+                <p>
+                    If you aren't familiar with the magic 8 ball, it is a "fortune" teller which will give out a random output when shook. With this command, the Bot mimics 8ball's functionality, by spitting out a random output from a list of 20 predetermined outputs. The outputs are saved in the list <b>responses</b> and uses the <b>random.choice</b> function to get a random output.
+                    The <b>async with ctx.channel.typing()</b> makes the bot appear in the discord app as if it is typing, thus, mimicing a user while he/she is constructing his message. This way the bot provides feedback to the user while it is carrying out the command.
+                </p>
+            </li>
+            <li>
+                <b>>df</b>
+                <p>Parameters: <b>{member: required}</b></p>
+                <p>
+                    I spent some time in gathering making a list of shakespearen english insults.. The Bot, when commanded, would pick out a random insult from this list and direct this insult towards that member that was mentioned in the command. I stuck to shaespearen insults as a throwback to my school days, when we had shakespear's "As You Like It" play as a part of my curriculum. And also, they're absolutely hilarious.
+                </p>
+            </li>
+            <li>
+                <b>>memez</b>
+                <p>Parameters: <b>{subreddit: Optional}</b></p>
+                <p>
+                    To get memes from reddit, I used the <b>praw</b> library, which is the <b>Python Reddit API Wrapper</b>. The user can choose to give a specific subreddit that they wish to retrieve a meme from. If not, the Bot has a list of predefined subreddits and it chooses one a random, to fetch a meme from. 
+                </p>
+            </li>
+            <li>
+                <b>>dad_joke</b>
+                <p> Parameters: <b>{None}</b></p>
+                <script src="https://gist.github.com/agk98/b87c939f1f466a794d80596d8ab69fec.js"></script>
+                <p>
+                    All of us hate that we laugh at the lamest dad jokes. I wanted my Bot to have the functionality of lightening up someone's day by giving out dad jokes whenever they wanted. With this, the Bot presents the user with a dad joke that it retrieved from the internet. To retrieve a dad joke, the Bot accesses any one of the two APIs that I found online. With the <b>requests</b> library of Python, the Bot is able to retrieve JSON data from these APIs and extract it's contents. 
+                    As the API from <b>rapidapi.com</b> allows for only 50 requests per day, I added in the <b>icanhazdadjoke</b> API too. This way, the Bot can always ensure that the user gets their new favorite dad joke and isn't let down.
+                </p>
+            </li>
+        </ol>
+    </li>
+</ul>
+
+<h2><b>Deploying The Bot!</b></h2>
+<p>
+    To have DeeRank running 24x7, I couldn't keep the script running all the time on my computer. For this reason, I needed to deploy it on a server. To make this possible, I chose to host my Discord Bot on Heroku.
+</p>
+<p>
+    Heroku is a cloud platform that lets you build, deliver, monitor and scalre apps. Heroku provides us with an option to host applications for free. The limitation being that it would work for only 1000 active hours in a month. This is more than enough to host a personal Discord Bot.
+</p>
+
+<h2><b>That's All Folks!!!</b></h2>
+<p>
+    Thank you for making it to the end of this blog. I had a lot of fun while learning to build this Discord Bot. I learned and used a few new techniques like decorators, using the ASYNCIO library and interacting with the Discord API. Infact, this is my first application that I have successfully deployed online and is available for use by anyone. If you'd like to give DeeRank a try in your own guild, click on the button below:
+    <div style="text-align:center">
+        <!-- <form action="https://discord.com/api/oauth2/authorize?client_id=733686227684818946&permissions=268688438&scope=bot">
+            <input type="submit" value="Add DeeRank To Your Guild!"/>
+        </form> -->
+        <a class="no_underline" href="https://discord.com/api/oauth2/authorize?client_id=733686227684818946&permissions=268688438&scope=bot" target="_blank"><input type="button" value="Add DeeRank To Your Guild!"></a>
+    </div>
+</p>
+<p>
+    All of DeeRank's code is availabe on my GitHub.
+</p>
+<div style="text-align:center">
+    <a class="no_underline" href="https://github.com/agk98/deerank_bot" target="_blank"><input type="button" value="DeeRank's Source Code"></a>
+    <!-- All of DeeRank's source code is in my <a  href="https://github.com/agk98/deerank_bot" target="_blank">Github repository</a>. -->
+</div>
+<p>
+    Have a great day!
+</p>
+<h2><b>References</b></h2>
+<p>
+    <b><a href="https://discordpy.readthedocs.io/en/latest/" target="_blank">Discord.py Documentation</a><br/>
+       <a href="https://www.youtube.com/watch?v=5yahh4tR0L0&list=PLW3GfRiBCHOiEkjvQj0uaUB1Q-RckYnj9" target="_blank">Discord Bot With Python</a><br/>
+       <a href="https://www.youtube.com/watch?v=BPvg9bndP1U&t=613s" target="_blank">Deploying Bot To Heroku</a></b>
+</p>
+
+

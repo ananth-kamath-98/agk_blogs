@@ -1,9 +1,14 @@
+
 {%- if site.texture.showNav -%}
 <div class="navbar">
-	<ul>
-		{% for link in site.texture.navigation %}
-		<a href="{{ link.url | prepend:site.baseurl }}"><li {% if link.url == page.url %}class="active"{% endif %} >{{ link.title }}</li></a>
-		{% endfor %}
+	<ul style="font-weight: bold; ">
+		{%- if page.layout!='home' -%}
+		<a href="https://blog.ananthkamath.com"><li>Blog Home</li></a>
+		{%- endif -%}
+
+		{%- if page.layout=='home' -%}
+		<a href="https://ananthkamath.com" target="_blank"><li>About Me</li></a>
+		{%- endif -%}
 	</ul>
 </div>
 {%- endif -%}
